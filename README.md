@@ -6,7 +6,7 @@ A ready-to-use VS Code dev container template with Python 3.12, uv package manag
 
 1. **Use this template:**
    - Click "Use this template" → "Create a new repository"
-   - Or clone: `git clone https://github.com/yourusername/python-devcontainer-template.git`
+   - Or clone: `git clone https://github.com/talenddev/python-devcontainer-template.git`
 
 2. **Open in VS Code:**
    - Open the project in VS Code

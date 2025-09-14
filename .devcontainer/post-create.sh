@@ -29,17 +29,6 @@ python3 --version
 uv --version
 claude --version
 
-# Create a sample Python project structure
-echo "📁 Creating sample project structure..."
-mkdir -p /workspaces/sample-project
-cd /workspaces/sample-project
-
-# Initialize a Python project with uv
-uv init --name sample-project --python 3.12
-
-# Install some common development packages
-uv add --dev pytest black flake8 isort mypy
-
 echo "🎉 Development environment setup complete!"
 echo ""
 echo "Available tools:"

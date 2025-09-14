@@ -17,9 +17,6 @@ dev = [
     "mypy>=1.0",
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 88

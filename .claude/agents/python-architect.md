@@ -104,7 +104,7 @@ Every infrastructure choice has a local equivalent. Use the same interface so pr
 
 ```python
 # src/shared/config.py
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # Storage — points to MinIO locally, S3 in prod
@@ -121,8 +121,7 @@ class Settings(BaseSettings):
 
     environment: str = "local"  # local | staging | production
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()
 ```
@@ -149,8 +148,6 @@ Every project gets this as its local infrastructure foundation:
 
 ```yaml
 # docker-compose.yml
-version: "3.9"
-
 services:
   app:
     build: .

@@ -411,6 +411,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
       - run: uv run ruff check src/
+      - run: uv run ruff format --check src/
       - run: uv run mypy src/
 ```
 
@@ -426,6 +427,7 @@ on:
 env:
   AWS_REGION: eu-west-1
   ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
+  SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
 
 jobs:
   deploy:
@@ -474,7 +476,7 @@ FROM python:3.12-slim AS builder
 WORKDIR /app
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.4.30 /uv /usr/local/bin/uv
 
 # Install dependencies first (layer caching)
 COPY pyproject.toml uv.lock ./

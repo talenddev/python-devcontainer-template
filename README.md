@@ -6,9 +6,14 @@ A ready-to-use VS Code dev container template with Python 3.12, uv package manag
 
 1. **Use this template:**
    - Click "Use this template" → "Create a new repository"
-   - Or clone: `git clone https://github.com/talenddev/python-devcontainer-template.git`
 
-2. **Open in VS Code:**
+2. **Create the `develop` branch** (required by the Git flow):
+   ```bash
+   git checkout -b develop
+   git push -u origin develop
+   ```
+
+3. **Open in VS Code:**
    - Open the project in VS Code
    - When prompted, click "Reopen in Container"
    - Wait for the container to build (first time takes a few minutes)
@@ -45,10 +50,10 @@ uv run python your_script.py
 ### Claude Code
 ```bash
 # Start interactive session
-claude-code
+claude
 
-# Get help with a specific file
-claude-code --file src/main.py
+# Ask Claude about a specific file
+claude "explain src/main.py"
 ```
 
 You ──▶ @agent-python-architect       "design the system"

@@ -86,6 +86,8 @@ celerybeat-schedule
 
 # Environments
 .env
+.env.local
+.env.*.local
 .venv
 env/
 venv/
@@ -114,3 +116,14 @@ dmypy.json
 
 # uv
 .uv/
+
+# Claude Code agent runtime files
+PROGRESS.md
+
+# Terraform
+*.tfvars
+!*.tfvars.example
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl

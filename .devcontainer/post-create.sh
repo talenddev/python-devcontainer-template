@@ -1,42 +1,41 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Setting up development environment..."
-
-# Update package lists
-sudo apt-get update
+echo "Setting up development environment..."
 
 # Install uv package manager
-echo "📦 Installing uv package manager..."
+echo "Installing uv package manager..."
 curl -LsSf https://astral.sh/uv/install.sh | sh
-source ~/.bashrc
 
-# Add uv to PATH for current session
+# Add uv to PATH for the rest of this script
 export PATH="$HOME/.local/bin:$PATH"
 
-# Install Claude Code
-echo "🤖 Installing Claude Code..."
-# First, install Node.js if not present (Claude Code is distributed as npm package)
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-sudo apt-get install -y nodejs
+# Persist PATH in zsh config for interactive sessions
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
 
-# Install Claude Code globally
-sudo npm install -g @anthropic-ai/claude-code
+# Install Claude Code via npm (Node.js provided by devcontainer feature)
+echo "Installing Claude Code..."
+npm install -g @anthropic-ai/claude-code
+
+# Install project dependencies
+echo "Installing project dependencies..."
+if [ -f "pyproject.toml" ]; then
+    uv sync --dev
+fi
 
 # Verify installations
-echo "✅ Verifying installations..."
+echo "Verifying installations..."
 python3 --version
 uv --version
 claude --version
 
-echo "🎉 Development environment setup complete!"
+echo "Development environment setup complete!"
 echo ""
 echo "Available tools:"
 echo "  - Python 3.12: python3"
-echo "  - UV package manager: uv"
-echo "  - Claude Code: claude-code"
+echo "  - uv package manager: uv"
+echo "  - Claude Code: claude"
 echo ""
 echo "To get started:"
 echo "  1. Use 'uv add <package>' to install Python packages"
-echo "  2. Use 'claude-code' to interact with Claude for coding tasks"
-echo "  3. Your project is initialized in /workspaces/sample-project"
+echo "  2. Use 'claude' to start an interactive Claude Code session"

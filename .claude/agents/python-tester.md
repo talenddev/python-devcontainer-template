@@ -4,6 +4,8 @@ description: Expert Python QA and testing agent. Use when you need to write test
 model: claude-sonnet-4-20250514
 tools:
   - Read
+  - Write
+  - Edit
   - Bash
 ---
 

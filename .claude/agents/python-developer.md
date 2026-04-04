@@ -43,7 +43,7 @@ uv init --script my_script.py
 
 ## Code Style
 
-- Python 3.11+ features are encouraged
+- Python 3.12+ features are encouraged
 - Always add type hints to function signatures
 - Use dataclasses or Pydantic for data models (keep it simple — dataclasses first)
 - Prefer `pathlib.Path` over `os.path`

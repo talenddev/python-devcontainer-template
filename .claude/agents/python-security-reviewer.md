@@ -48,9 +48,8 @@ Every finding gets exactly one severity. Do not inflate or deflate.
 Run these commands and parse the output:
 
 ```bash
-# Scan for known CVEs in dependencies
-uv run pip-audit --format json 2>/dev/null || \
-uv add --dev pip-audit && uv run pip-audit --format json
+# Scan for known CVEs in dependencies (pip-audit must already be installed)
+uv run pip-audit --format json
 
 # Check for outdated packages (informational)
 uv tree --outdated 2>/dev/null || true

@@ -1,0 +1,10 @@
+# Global owner — reviews required on all PRs
+* @talenddev
+
+# Devcontainer and CI changes require explicit review
+.devcontainer/ @talenddev
+.github/ @talenddev
+
+# Security-sensitive files
+.claude/settings.json @talenddev
+pyproject.toml @talenddev

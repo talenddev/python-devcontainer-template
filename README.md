@@ -56,6 +56,9 @@ claude
 claude "explain src/main.py"
 ```
 
+## Code flow
+
+```
 You ──▶ @agent-python-architect       "design the system"
             │  ARCHITECTURE BRIEF + docker-compose.yml
             ▼
@@ -89,6 +92,7 @@ You ──▶ @agent-python-tech-lead       "implement the brief"
             │  Terraform + CI/CD + CloudWatch alarms
             ▼
             🚀 Production
+```
 
 ## 🔧 Customization
 

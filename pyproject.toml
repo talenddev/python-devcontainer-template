@@ -1,5 +1,5 @@
 [project]
-name = "my-python-project"
+name = "python-devcontainer-template"
 version = "0.1.0"
 description = "A Python project using uv and dev containers"
 authors = [

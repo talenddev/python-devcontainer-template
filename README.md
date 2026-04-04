@@ -51,6 +51,40 @@ claude-code
 claude-code --file src/main.py
 ```
 
+You ──▶ @agent-python-architect       "design the system"
+            │  ARCHITECTURE BRIEF + docker-compose.yml
+            ▼
+You ──▶ @agent-python-tech-lead       "implement the brief"
+            │
+            │  ┌─── loops until all tasks green ───┐
+            │  │  @agent-python-developer (builds)  │
+            │  │  @agent-python-tester   (audits)   │
+            │  └────────────────────────────────────┘
+            │  PROGRESS.md: all tasks complete ✅
+            ▼
+    @agent-python-security-reviewer   (gate 1)
+            │
+            ├── 🔴 BLOCKED → fix → re-review
+            └── 🟢 APPROVED
+                    ▼
+    @agent-python-docs-writer         (gate 2) ← NEW
+            │
+            │  produces:
+            │  ├── services/*/README.md
+            │  ├── docs/local-setup.md
+            │  ├── docs/api/*.md
+            │  ├── docs/adr/ADR-*.md
+            │  ├── docs/runbooks/*.md
+            │  └── CHANGELOG.md
+            │
+            │  HANDOFF REPORT
+            ▼
+    @agent-python-devops               "promote to AWS"
+            │
+            │  Terraform + CI/CD + CloudWatch alarms
+            ▼
+            🚀 Production
+
 ## 🔧 Customization
 
 Edit `.devcontainer/post-create.sh` to:

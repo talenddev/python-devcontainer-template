@@ -386,20 +386,6 @@ claude "EDA on customer churn dataset"
 
 ---
 
-## 🛠️ OpenCode Tools
-
-The following OpenCode agent tools are available:
-
-| Tool | Description |
-|---|---|
-| `mcp__claude_ai_Excalidraw__create_view` | Create hand-drawn diagrams |
-| `mcp__claude_ai_Excalidraw__export_to_excalidraw` | Export diagrams to excalidraw.com |
-| `mcp__claude_ai_Gmail__authenticate` | Authenticate Gmail access |
-| `mcp__claude_ai_Google_Calendar__authenticate` | Authenticate Google Calendar |
-| `mcp__claude_ai_Google_Calendar__complete_authentication` | Complete calendar OAuth |
-
----
-
 ## 📂 Git Flow
 
 ### Branch Strategy

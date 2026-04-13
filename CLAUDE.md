@@ -4,11 +4,11 @@
 
 ### Branch strategy
 - `main`        — production only, protected, no direct commits
-- `develop`     — integration branch, all features merge here first
-- `feature/*`   — one branch per task, branched from develop
-- `fix/*`       — bug fixes raised by tester or security reviewer
+- `develop`     — integration branch, all features merge here
+- `feature/*`   — one branch per task, from develop
+- `fix/*`       — bug fixes from tester or security reviewer
 - `release/*`   — cut from develop when releasing, merged to main + develop
-- `hotfix/*`    — cut from main for production incidents only
+- `hotfix/*`    — cut from main for prod incidents only
 
 ### Branch naming
 feature/TASK-{N}-{short-slug}       # e.g. feature/TASK-3-order-repository
@@ -27,12 +27,12 @@ refactor(domain): extract price calculation to pure function
 Types: `feat`, `fix`, `test`, `docs`, `chore`, `refactor`, `ci`, `perf`
 
 ### Pull Request rules
-- Every feature/* and fix/* branch requires a PR into develop
+- `feature/*` and `fix/*` require PR into develop
 - PR title = commit message format
-- PR must pass CI (tests + linting) before merge
-- Squash merge into develop to keep history clean
+- Pass CI (tests + linting) before merge
+- Squash merge into develop
 - Delete branch after merge
 
 ### Protected branches
 - `main` and `develop` — no direct pushes, ever
-- Merging to main requires PR from a release/* or hotfix/* branch
+- Merge to main requires PR from release/* or hotfix/* branch

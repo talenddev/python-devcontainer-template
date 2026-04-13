@@ -1,6 +1,4 @@
-# Python Development Container Template
-
-A ready-to-use VS Code dev container template with Python 3.12, uv package manager, and Claude Code.
+# Python Development Template for Claude/Opencode
 
 ## 🚀 Quick Start
 
@@ -13,22 +11,29 @@ A ready-to-use VS Code dev container template with Python 3.12, uv package manag
    git push -u origin develop
    ```
 
-3. **Open in VS Code:**
-   - Open the project in VS Code
-   - When prompted, click "Reopen in Container"
-   - Wait for the container to build (first time takes a few minutes)
+3. **Install tools**:
+   ```bash
+   echo "Installing uv package manager..."
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   # Add uv to PATH for the rest of this script
+   export PATH="$HOME/.local/bin:$PATH"
+   # Persist PATH in zsh config for interactive sessions
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
 
-## 🛠️ What's Included
+   pip install graphifyy
+   graphify install
 
-- **Python 3.12** - Latest stable Python
-- **uv** - Fast Python package manager
-- **Claude Code** - AI coding assistant
-- **VS Code Extensions:**
-  - Python extension pack
-  - Black formatter
-  - Flake8 linter
-  - Jupyter support
-  - GitHub Copilot (if you have access)
+   # Install Claude Code via npm (Node.js provided by devcontainer feature)
+   echo "Installing Claude Code..."
+   npm install -g @anthropic-ai/claude-code
+
+   graphify claude install
+
+   # Install OpenCode
+   curl -fsSL https://opencode.ai/install | bash
+   graphify opencode install
+   ```
+
 
 ## 📝 Usage
 
@@ -56,53 +61,79 @@ claude
 claude "explain src/main.py"
 ```
 
+
+### Open Code
+```bash
+# Start interactive session
+opencode
+```
+
+
+## Agent team
+
+| Agent | Role | Triggers on |
+|---|---|---|
+| `python-architect` | System design, service boundaries, local/AWS mapping | "design", "architect", "how should I structure" |
+| `python-tech-lead` | Orchestrates the full build loop, coordinates all agents | "build this", "implement the brief", "run the team" |
+| `python-developer` | Writes Python code (uv, FastAPI, SQLAlchemy, SQS) | assigned by tech-lead |
+| `python-reviewer` | Code quality gate — KISS/YAGNI, boundary violations, type safety | "review this code", assigned by tech-lead after developer |
+| `python-migrator` | Writes and verifies Alembic migrations, zero-downtime patterns | "add migration", "schema change", assigned by tech-lead |
+| `python-tester` | Audits coverage (≥ 90%), raises bug reports | assigned by tech-lead after reviewer |
+| `python-security-reviewer` | Security gate before docs or AWS promotion | "security review", "before we deploy" |
+| `python-docs-writer` | README, API reference, ADRs, runbooks, local-setup guide | "write docs", invoked by tech-lead after security passes |
+| `python-devops` | Terraform, ECS, RDS, SQS, CI/CD, monitoring | "deploy", "terraform", "promote to prod" |
+| `python-release-manager` | Cuts releases, bumps versions, tags, manages hotfixes | "release", "ship this", "hotfix", "cut a release" |
+| `python-data-scientist` | EDA, feature engineering, model training, evaluation, export | "train a model", "predict", "classify", "EDA", "machine learning" |
+
 ## Code flow
 
 ```
-You ──▶ @agent-python-architect       "design the system"
-            │  ARCHITECTURE BRIEF + docker-compose.yml
-            ▼
-You ──▶ @agent-python-tech-lead       "implement the brief"
+You ──▶ python-architect              "design the system"
             │
-            │  ┌─── loops until all tasks green ───┐
-            │  │  @agent-python-developer (builds)  │
-            │  │  @agent-python-tester   (audits)   │
-            │  └────────────────────────────────────┘
+            │  produces:
+            │  ├── ARCHITECTURE BRIEF  ──────────────────────▶ python-tech-lead
+            │  ├── docker-compose.yml  (local infra skeleton)
+            │  ├── INFRA BRIEF         ──────────────────────▶ python-devops
+            │  └── DOCS BRIEF          ──────────────────────▶ python-docs-writer
+            ▼
+You ──▶ python-tech-lead              "implement the brief"
+            │
+            │  ┌─── per task (in order) ────────────────────────┐
+            │  │  1. python-developer   builds                   │
+            │  │  2. python-migrator    schema changes (if any)  │
+            │  │  3. python-reviewer    code quality gate        │
+            │  │  4. python-tester      coverage ≥ 90%           │
+            │  │  5. fix loop           max 3 iterations         │
+            │  │  6. merge checklist    PR → CI → squash         │
+            │  └────────────────────────────────────────────────┘
+            │
             │  PROGRESS.md: all tasks complete ✅
             ▼
-    @agent-python-security-reviewer   (gate 1)
+    python-security-reviewer          (gate 1)
             │
-            ├── 🔴 BLOCKED → fix → re-review
-            └── 🟢 APPROVED
+            ├── 🔴 critical/high → fix/* branch → re-review (max 2x)
+            └── 🟢 clean (medium/low logged as debt)
                     ▼
-    @agent-python-docs-writer         (gate 2) ← NEW
+    python-docs-writer                (gate 2)
             │
             │  produces:
             │  ├── services/*/README.md
             │  ├── docs/local-setup.md
             │  ├── docs/api/*.md
             │  ├── docs/adr/ADR-*.md
-            │  ├── docs/runbooks/*.md
-            │  └── CHANGELOG.md
-            │
-            │  HANDOFF REPORT
+            │  └── docs/runbooks/*.md
             ▼
-    @agent-python-devops               "promote to AWS"
+    python-devops                     "promote to AWS"
             │
-            │  Terraform + CI/CD + CloudWatch alarms
+            │  Terraform + ECS + RDS + SQS + CI/CD + CloudWatch
             ▼
             🚀 Production
+            │
+            ▼
+    python-release-manager            "ship it"
+            │
+            │  cut release/* → bump version → CHANGELOG
+            │  → PR to main → tag → back-merge to develop
+            ▼
+            🏷️  v{X.Y.Z} tagged on main
 ```
-
-## 🔧 Customization
-
-Edit `.devcontainer/post-create.sh` to:
-- Add more system packages
-- Install additional Python packages
-- Configure your development environment
-
-## 📁 Project Structure
-
-- `src/` - Your Python source code
-- `.devcontainer/` - Dev container configuration
-- `pyproject.toml` - Python project configuration

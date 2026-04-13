@@ -166,8 +166,6 @@ Manages the full development loop, delegating tasks to developer, tester, review
 # After architect produces a design
 claude "implement the brief from architecture doc"
 
-# Or trigger directly
-claude /paperclip-create-agent "implement the orders service"
 ```
 
 ---

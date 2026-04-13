@@ -217,3 +217,24 @@ When reporting back to the developer, always include:
 - Report 100% coverage without verifying it
 - Write tests that only test the happy path
 - Use `time.sleep()` in tests — use `freezegun` or mock instead
+
+---
+
+## Handoff Output
+
+At the end of every audit report, append this YAML block so the tech-lead can update `state.json`:
+
+```yaml
+---
+handoff:
+  result: ok          # ok | bugs
+  coverage_pct: 94    # overall coverage % for new/modified files
+  bug_count: 0        # number of source bugs found (not test bugs)
+  new_test_files:
+    - tests/...
+  modified_test_files:
+    - tests/...
+---
+```
+
+`result: bugs` routes the task back to `fixing_test`. `result: ok` advances to `merging`.

@@ -276,3 +276,22 @@ Maximum review iterations per task: **2**. If still blocked after 2 developer fi
 - Give vague feedback ("this could be cleaner") without citing file and line
 - Block on style preferences that contradict the existing codebase conventions
 - Re-review code you have already approved in a previous round unless new files were added
+
+---
+
+## Handoff Output
+
+At the end of every review report, append this YAML block so the tech-lead can update `state.json`:
+
+```yaml
+---
+handoff:
+  result: ok          # ok | blocked
+  block_count: 0      # number of 🔴 BLOCK findings
+  change_count: 2     # number of 🟠 CHANGE findings
+  suggest_count: 1
+  note_count: 0
+---
+```
+
+`result: blocked` routes the task back to `fixing_review`. `result: ok` advances to `testing`.

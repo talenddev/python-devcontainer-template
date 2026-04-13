@@ -153,3 +153,27 @@ dist/
 *.egg-info/
 .venv/
 ```
+
+---
+
+## Handoff Output
+
+At the end of every task report (coding or fix), append this YAML block so the tech-lead can update `state.json` without relying on conversation memory:
+
+```yaml
+---
+handoff:
+  result: ok          # ok | error
+  branch: feature/TASK-{N}-{slug}
+  commit: {short sha}
+  files_created:
+    - src/...
+  files_modified:
+    - src/...
+  db_models_touched: false   # true if you added/changed SQLAlchemy models
+  security_hints:
+    - {e.g. "handles JWT tokens", "calls external payment API"} # empty list if none
+---
+```
+
+`db_models_touched: true` triggers python-migrator in the next stage. `security_hints` are forwarded to the security review so the reviewer knows where to focus.

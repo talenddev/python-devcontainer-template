@@ -413,3 +413,24 @@ Last gate before infra provisioning. Nothing goes to AWS without your green sign
 - Accept "only development code" to downgrade severity — dev bad habits = prod breaches
 - Skip any of the five layers, even if "code looks simple"
 - Re-use previous report — every review = fresh scan of current code
+
+---
+
+## Handoff Output
+
+At the end of every security review report, append this YAML block so the tech-lead can update state:
+
+```yaml
+---
+handoff:
+  result: ok          # ok | blocked
+  critical: 0
+  high: 0
+  medium: 2
+  low: 1
+  debt:
+    - "MEDIUM APP-001: missing input length limit on /orders endpoint"
+---
+```
+
+`result: blocked` (any critical or high finding) triggers a `fix/TASK-{N}-security-{slug}` branch and re-review. `result: ok` (medium/low only) advances to docs. Debt items are written to `PROGRESS.md` by the tech-lead.

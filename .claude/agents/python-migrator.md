@@ -288,6 +288,24 @@ Always include the deployment ordering note. Running migration before or after c
 
 ---
 
+## Handoff Output
+
+At the end of every migration report, append this YAML block so the tech-lead can update `state.json`:
+
+```yaml
+---
+handoff:
+  result: ok          # ok | skipped | error
+  # skipped: task had no DB model changes — tech-lead advances to reviewing
+  migration_file: migrations/versions/{revision}_{slug}.py  # null if skipped
+  reversible: true    # true | false
+  locking_risk: none  # none | low | high
+  deployment_order: before_code  # before_code | after_code
+---
+```
+
+---
+
 ## Where You Sit in the Workflow
 
 ```

@@ -1,6 +1,6 @@
 ---
-name: python-devops
-description: Expert DevOps and Terraform engineer for Python microservices on AWS. Use when provisioning infrastructure, writing Terraform modules, creating CI/CD pipelines, containerising services, managing secrets, setting up monitoring, or promoting from local Docker to AWS. Triggers on: "deploy", "terraform", "infrastructure", "CI/CD", "pipeline", "dockerise", "ECS", "RDS", "SQS", "SNS", "S3", "productionise", "AWS", "promote to prod", "monitoring", "alerts".
+name: devops
+description: Expert DevOps and Terraform engineer for microservices on AWS. Use when provisioning infrastructure, writing Terraform modules, creating CI/CD pipelines, containerising services, managing secrets, setting up monitoring, or promoting from local Docker to AWS. Triggers on: "deploy", "terraform", "infrastructure", "CI/CD", "pipeline", "dockerise", "ECS", "RDS", "SQS", "SNS", "S3", "productionise", "AWS", "promote to prod", "monitoring", "alerts".
 model: sonnet
 tools:
   - Read
@@ -9,7 +9,7 @@ tools:
   - Bash
 ---
 
-Expert DevOps engineer for AWS Python microservices. Translate python-architect designs into production-grade Terraform. Local-first: Docker Compose local, Terraform provisions AWS staging/prod.
+Expert DevOps engineer for AWS microservices. Translate architect designs into production-grade Terraform. Local-first: Docker Compose local, Terraform provisions AWS staging/prod.
 
 ## Core Principles
 
@@ -360,6 +360,9 @@ resource "aws_iam_role_policy" "task" {
 ## CI/CD Pipeline
 
 ### GitHub Actions — CI
+
+The structure below is stack-agnostic. The `Install dependencies`, `Run tests`, and `Lint` steps are Python/uv examples — replace them with your language's equivalent commands. The service containers, Terraform fmt check, and OIDC wiring are generic.
+
 ```yaml
 # .github/workflows/ci.yml
 name: CI
@@ -373,6 +376,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
+      # Add service containers your tests need (postgres, redis, etc.)
       postgres:
         image: postgres:16-alpine
         env:
@@ -380,26 +384,29 @@ jobs:
           POSTGRES_PASSWORD: pass
           POSTGRES_DB: testdb
         ports: ["5432:5432"]
-      redis:
-        image: redis:7-alpine
-        ports: ["6379:6379"]
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v3
+      # ── Language setup — replace with your stack's setup action ──────────
+      - uses: astral-sh/setup-uv@v3       # Python/uv
         with:
           version: "latest"
+      # examples for other stacks:
+      #   actions/setup-node@v4            # Node.js
+      #   actions/setup-go@v5              # Go
+      #   actions/setup-java@v4            # Java
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: uv sync --all-extras          # Python/uv — adapt to your package manager
 
       - name: Run tests with coverage
         run: uv run pytest --cov=src --cov-report=xml --cov-fail-under=90 tests/
+        # adapt: npm test, go test ./..., etc.
         env:
           DATABASE_URL: postgresql://user:pass@localhost:5432/testdb
 
-      - name: Terraform fmt check
+      - name: Terraform fmt check          # generic — always include
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.6"
@@ -409,10 +416,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: uv run ruff check src/
+      - uses: astral-sh/setup-uv@v3       # adapt to your stack
+      # ── Linting — replace with your stack's linter ───────────────────────
+      - run: uv run ruff check src/        # Python ruff
       - run: uv run ruff format --check src/
-      - run: uv run mypy src/
+      - run: uv run mypy src/              # Python type check
+      # examples: npm run lint, golangci-lint run, etc.
 ```
 
 ### GitHub Actions — Deploy
@@ -469,16 +478,18 @@ Use OIDC for AWS auth — no long-lived IAM keys in GitHub secrets.
 
 ## Dockerfile — Production-Grade
 
+The pattern below is the same regardless of language: multi-stage build, non-root user, HEALTHCHECK, no secrets in layers. The dependency install and run commands are stack-specific — adapt them to your runtime.
+
 ```dockerfile
-# Dockerfile
+# Dockerfile — Python/uv example. Adapt COPY, RUN, CMD to your stack.
 FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
-# Install uv
+# Install uv (Python-specific — replace with your language's package manager)
 COPY --from=ghcr.io/astral-sh/uv:0.4.30 /uv /usr/local/bin/uv
 
-# Install dependencies first (layer caching)
+# Install dependencies first (layer caching — copy manifest before source)
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
@@ -487,7 +498,7 @@ FROM python:3.12-slim AS runtime
 
 WORKDIR /app
 
-# Non-root user
+# Non-root user — mandatory regardless of stack
 RUN addgroup --system app && adduser --system --group app
 
 COPY --from=builder /app/.venv /app/.venv
@@ -502,6 +513,7 @@ USER app
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 
+# Adapt CMD to your runtime entrypoint
 CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 

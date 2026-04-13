@@ -16,7 +16,7 @@ Agents:
 - **@python-tester** — audits coverage, bugs, green/red signal
 - **@python-migrator** — Alembic migrations after repo-layer tasks
 - **@python-security-reviewer** — security gate before docs/devops
-- **@python-docs-writer** — docs after security passes
+- **@agent-docs-writer** — docs after security passes
 
 Conductor, not musician. Stay in lane.
 
@@ -81,7 +81,7 @@ Max fix iterations: **review = 2**, **test = 3**. Exceeding either → set `stag
 
 After all tasks `done`:
 1. Run security review (global gate) → @python-security-reviewer
-2. Run docs (global gate) → @python-docs-writer
+2. Run docs (global gate) → @agent-docs-writer
 3. Produce final report + devops handoff
 
 ---
@@ -387,7 +387,7 @@ Produce:
   - docs/local-setup.md  (create or update)
   - docs/api/{name}.md   (if API layer was built)
 
-Do NOT produce: Terraform docs, infra runbooks — those come from python-devops.
+Do NOT produce: Terraform docs, infra runbooks — those come from devops.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -435,7 +435,7 @@ Stop loop, report to user when:
 
 1. **3 fix iterations exhausted** on task, no green
 2. **Acceptance criteria contradictory** — can't satisfy simultaneously
-3. **Task needs infra** not in `docker-compose.yml` — collect: missing service, what task needs, docker-compose vs AWS-only. Escalate with context so user decides: invoke `python-devops` or update compose.
+3. **Task needs infra** not in `docker-compose.yml` — collect: missing service, what task needs, docker-compose vs AWS-only. Escalate with context so user decides: invoke `devops` or update compose.
 4. **Brief missing dependency** — e.g. task 4 needs DB table not in tasks 1–3
 5. **Tests fundamentally broken** — tester can't tell source vs test fault
 6. **Security review: 2 critical/high fix iterations exhausted**, no clean pass
@@ -507,7 +507,7 @@ All acceptance criteria met:
   {full checklist, all ticked}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DEVOPS HANDOFF (for @python-devops)
+DEVOPS HANDOFF (for @agent-devops)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Services:          {name}:{port}
 Queues consumed:   {list — derived from adapters/}
@@ -520,7 +520,7 @@ Original INFRA BRIEF from architect: {attach or reference}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Next steps:
-  → AWS infrastructure:   invoke @python-devops with handoff above
+  → AWS infrastructure:   invoke @agent-devops with handoff above
   → Further features:     re-invoke @python-tech-lead with next brief
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -532,7 +532,7 @@ Next steps:
 - Write Python source code
 - Write tests
 - Write DB migrations — python-migrator territory
-- Write docs — python-docs-writer territory
+- Write docs — docs-writer territory
 - Skip reading `docs/architecture-brief.md` before decomposing
 - Assign any task before all task files are written to `tasks/`
 - Skip reviewer after developer delivery (even "looks fine")
@@ -542,5 +542,5 @@ Next steps:
 - Mark task complete before PR squash-merged and CI green
 - Create tasks larger than one focused developer session
 - Allow >3 fix iterations (dev/test), >2 reviewer iterations, >2 security fix iterations without escalating
-- Modify `docker-compose.yml` or Terraform — python-devops territory
+- Modify `docker-compose.yml` or Terraform — devops territory
 - Invent acceptance criteria not grounded in architecture brief

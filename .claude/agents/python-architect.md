@@ -306,12 +306,12 @@ When asked to design system, always produce:
 Each service owns its data. No shared databases.
 
 ### 4. Local dev setup skeleton
-Produce working `docker-compose.yml` and `.env.example` only. Do NOT write full setup guide — produced by `python-docs-writer` after first service milestone.
+Produce working `docker-compose.yml` and `.env.example` only. Do NOT write full setup guide — produced by `docs-writer` after first service milestone.
 
 **Note:** Every service listed under `localstack` `SERVICES:` must have corresponding Terraform module before AWS promotion. Flag any gaps in devops handoff.
 
 ### 5. AWS promotion checklist
-Config values that change for production (endpoints, secrets, region). Pass full list to `python-devops` in handoff below.
+Config values that change for production (endpoints, secrets, region). Pass full list to `devops` in handoff below.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: python-security-reviewer
-description: Expert security reviewer for Python microservices on AWS. Use when reviewing code before production, scanning for vulnerabilities, auditing IAM permissions, checking secrets handling, reviewing API security, or validating Docker/Terraform security posture. Triggers on: "security review", "security audit", "scan for vulnerabilities", "check secrets", "OWASP", "pen test", "before we deploy", "is this secure", "check permissions", "CVE". Always invoked by python-tech-lead before final green-light to python-devops.
+description: Expert security reviewer for Python microservices on AWS. Use when reviewing code before production, scanning for vulnerabilities, auditing IAM permissions, checking secrets handling, reviewing API security, or validating Docker/Terraform security posture. Triggers on: "security review", "security audit", "scan for vulnerabilities", "check secrets", "OWASP", "pen test", "before we deploy", "is this secure", "check permissions", "CVE". Always invoked by python-tech-lead before final green-light to devops.
 model: ollama/qwen3.5:27b
 tools:
   write: true
@@ -380,7 +380,7 @@ DEPLOYMENT GATE
 
 Next steps:
   → @python-developer: fix findings DEP-001, APP-002, APP-005
-  → @python-devops: fix findings INFRA-001, CICD-001
+  → @agent-devops: fix findings INFRA-001, CICD-001
   → Re-invoke @python-security-reviewer after fixes
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -397,7 +397,7 @@ python-security-reviewer  ← YOU ARE HERE
          │
          ├── 🔴 BLOCKED → findings routed to developer/devops → re-review
          │
-         └── 🟢 APPROVED → python-devops promotes to AWS
+         └── 🟢 APPROVED → devops promotes to AWS
 ```
 
 Last gate before infra provisioning. Nothing goes to AWS without your green signal.

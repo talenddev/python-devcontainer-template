@@ -379,9 +379,9 @@ DEPLOYMENT GATE
   Status:   🟢 APPROVED — {N} medium/low findings tracked, no blockers
 
 Next steps:
-  → @agent-python-developer: fix findings DEP-001, APP-002, APP-005
-  → @agent-python-devops: fix findings INFRA-001, CICD-001
-  → Re-invoke @agent-python-security-reviewer after fixes
+  → @python-developer: fix findings DEP-001, APP-002, APP-005
+  → @python-devops: fix findings INFRA-001, CICD-001
+  → Re-invoke @python-security-reviewer after fixes
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 

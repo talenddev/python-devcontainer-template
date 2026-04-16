@@ -18,7 +18,7 @@ You ──▶ python-architect              "design the system"
             │  ├── INFRA BRIEF             ─▶ devops
             │  └── DOCS BRIEF              ─▶ docs-writer
             ▼
-python-tech-lead                      "implement the brief"
+python-tech-lead                      "Read docs/architecture-brief.md and run the full build. Decompose into tasks, write all task files first, then coordinate the team"
             │
             │  orchestrates the full development loop:
             │  1. python-developer       builds code
@@ -165,7 +165,6 @@ Manages the full development loop, delegating tasks to developer, tester, review
 ```bash
 # After architect produces a design
 claude "implement the brief from architecture doc"
-
 ```
 
 ---
@@ -418,58 +417,3 @@ claude "EDA on customer churn dataset"
 ### Protected Branches
 - `main` and `develop` — No direct pushes, ever
 - Merge to main requires PR from `release/*` or `hotfix/*` branch
-
----
-
-## 📊 Code Flow
-
-```
-You ──▶ python-architect              "design the system"
-            │
-            │  produces:
-            │  ├── ARCHITECTURE BRIEF  ──────────────────────▶ python-tech-lead
-            │  ├── docker-compose.yml  (local infra skeleton)
-            │  ├── INFRA BRIEF         ──────────────────────▶ devops
-            │  └── DOCS BRIEF          ──────────────────────▶ docs-writer
-            ▼
-python-tech-lead                      "implement the brief"
-            │
-            │  ┌─── per task (in order) ────────────────────────┐
-            │  │  1. python-developer   builds                   │
-            │  │  2. python-migrator    schema changes (if any)  │
-            │  │  3. python-reviewer    code quality gate        │
-            │  │  4. python-tester      coverage ≥ 90%           │
-            │  │  5. fix loop           max 3 iterations         │
-            │  │  6. merge checklist    PR → CI → squash         │
-            │  └────────────────────────────────────────────────┘
-            │
-            │  PROGRESS.md: all tasks complete ✅
-            ▼
-    python-security-reviewer          (gate 1)
-            │
-            ├── 🔴 critical/high → fix/* branch → re-review (max 2x)
-            └── 🟢 clean (medium/low logged as debt)
-                    ▼
-    docs-writer                       (gate 2)
-            │
-            │  produces:
-            │  ├── services/*/README.md
-            │  ├── docs/local-setup.md
-            │  ├── docs/api/*.md
-            │  ├── docs/adr/ADR-*.md
-            │  └── docs/runbooks/*.md
-            ▼
-    devops                            (promotion)
-            │
-            │  Terraform + ECS + RDS + SQS + CI/CD + CloudWatch
-            ▼
-            🚀 Production
-            │
-            ▼
-    release-manager                   (shipping)
-            │
-            │  cut release/* → bump version → CHANGELOG
-            │  → PR to main → tag → back-merge to develop
-            ▼
-            🏷️  v{X.Y.Z} tagged on main
-```

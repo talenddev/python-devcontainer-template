@@ -1,69 +1,62 @@
-TASK-5: Ollama provider implementation (chat + stream, no tool calls)
+TASK-5: Ollama provider
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CONTEXT
-  What exists: src/aiproxy/providers/ollama.py as empty stub, full domain types and
-    Provider protocol from TASK-2 and TASK-3.
-  What this task enables: TASK-6 (integration round-trip), TASK-7 (tool-call support for Ollama).
+  What exists: Provider Protocol, Client, Registry from TASK-3; domain types from
+               TASK-2. No Ollama SDK — use direct httpx calls to the REST API.
+  What this task enables: TASK-6 (integration tests) and TASK-7 (tool-call support).
 
 DEPENDS ON
   TASK-3
 
 OBJECTIVE
-  Implement OllamaProvider satisfying the Provider protocol: OllamaSettings (pydantic-settings),
-  chat() and stream() using httpx against the Ollama /api/chat endpoint (OpenAI-compatible
-  with NDJSON streaming), message translation to/from neutral types, and HTTP error mapping.
-  All tests use respx mocks.
+  Implement src/aiproxy/providers/ollama.py: an OllamaProvider class that satisfies
+  the Provider protocol, using httpx directly against the Ollama REST API
+  (POST /api/chat), backed by OllamaSettings (pydantic-settings). All HTTP calls
+  mocked via respx in tests.
 
 ACCEPTANCE CRITERIA
-  - [ ] OllamaSettings: base_url (default "http://localhost:11434"), timeout_s (default 120.0)
-        with env_prefix="OLLAMA_"
-  - [ ] OllamaProvider.__init__ accepts **kwargs forwarded to OllamaSettings
+  - [ ] OllamaSettings(BaseSettings) in src/aiproxy/providers/ollama.py with:
+        base_url: str = "http://localhost:11434", timeout_s: float = 120.0,
+        env_prefix="OLLAMA_", env_file=".env"
+  - [ ] OllamaProvider satisfies isinstance(provider, Provider) check
   - [ ] OllamaProvider.name == "ollama"
-  - [ ] chat() posts to {base_url}/api/chat with stream=false:
-        - ChatRequest.system folded into a {"role": "system", "content": "..."} message prepended
-        - user/assistant messages with TextPart content → {role, content: str}
-        - ToolSpec list → tools field (OpenAI JSON Schema format)
-        - ToolUsePart in assistant message → tool_calls array element
-        - ToolResultPart in user message → tool role message with tool_call_id
-        - temperature, num_predict (from max_tokens), stop forwarded when set
-  - [ ] chat() parses Ollama /api/chat response into ChatResponse:
-        - message.content → [TextPart(text)] when present
-        - message.tool_calls → [ToolUsePart(...)] when present
-        - done_reason: "stop"→"stop", "length"→"length", "tool_calls"→"tool_use"
-        - prompt_eval_count / eval_count → Usage
-        - raw set to full response dict
-  - [ ] stream() posts with stream=true, iterates NDJSON lines, emits neutral StreamEvents:
-        - non-done line with message.content delta → TextDelta
-        - final line with done=true → StreamEnd
-  - [ ] HTTP 404 → ProviderError, timeout → TimeoutError_, other errors → ProviderError
-  - [ ] OllamaProvider registered in registry on import: register("ollama", ...)
-  - [ ] aclose() closes the underlying httpx.AsyncClient
-  - [ ] tests/unit/providers/test_ollama.py: uses respx to mock POST /api/chat:
-        - test_chat_text_response: single TextPart in response
-        - test_chat_system_message_prepended: verifies system folded into messages list
-        - test_chat_finish_reason_stop
-        - test_chat_timeout_error (httpx.TimeoutException → TimeoutError_)
-        - test_stream_text_deltas: NDJSON stream yields TextDelta events then StreamEnd
-  - [ ] `uv run pytest tests/unit/providers/test_ollama.py -v` exits 0
-  - [ ] `uv run mypy src/aiproxy/providers/ollama.py` exits 0
-  - [ ] Coverage >= 90% on ollama.py
+  - [ ] OllamaProvider.chat() calls POST /api/chat with stream=false, maps
+        response to ChatResponse with TextPart, correct finish_reason, Usage, raw
+  - [ ] OllamaProvider handles ChatRequest.system by prepending a {"role":"system",
+        "content": system} message to the messages list
+  - [ ] OllamaProvider.stream() calls POST /api/chat with stream=true, reads
+        NDJSON response line-by-line, yields TextDelta per chunk, StreamEnd at end
+  - [ ] OllamaProvider.aclose() closes the httpx.AsyncClient
+  - [ ] Module-level self-registration: on import, registers "ollama" in registry
+  - [ ] HTTP errors: 404 -> ProviderError("model not found"), other 4xx/5xx -> ProviderError
+  - [ ] ChatResponse.raw contains the untouched provider JSON payload
+  - [ ] Unit tests in tests/unit/providers/test_ollama.py (respx mocks):
+        - chat() returns ChatResponse with TextPart
+        - chat() with system prepends system message
+        - stream() yields TextDelta events then StreamEnd
+        - 404 raises ProviderError
+        - 500 raises ProviderError
+        - OllamaProvider.name == "ollama"
+  - [ ] uv run pytest tests/unit/providers/test_ollama.py -- all pass
+  - [ ] uv run ruff check src/aiproxy/providers/ollama.py
+  - [ ] uv run mypy src/aiproxy/providers/ollama.py
 
 FILES TO CREATE OR MODIFY
-  - src/aiproxy/providers/ollama.py         ← implement
-  - tests/unit/providers/test_ollama.py     ← new
+  - src/aiproxy/providers/ollama.py       <- implement
+  - tests/unit/providers/test_ollama.py   <- new
 
 CONSTRAINTS
-  - Use httpx.AsyncClient directly; no ollama SDK
-  - Use respx for all HTTP mocking; no live Ollama calls in unit tests
-  - NDJSON streaming: each line is a JSON object; stream until done=true
-  - Ollama has no authentication — no API key handling needed
-  - Tool calls in chat() must be translatable but tool-call-specific TESTS are TASK-7
-  - Usage fields may be 0 if Ollama omits them — handle gracefully (default to 0)
+  - Use httpx.AsyncClient directly (no Ollama SDK)
+  - Use respx to mock HTTP in tests
+  - Ollama /api/chat endpoint: POST with JSON body {model, messages, stream, options}
+  - Streaming response is NDJSON (one JSON object per line)
+  - Non-streaming response: response.json() -> {model, message, done_reason, prompt_eval_count,
+    eval_count, ...}
+  - Map done_reason: "stop" -> "stop", "length" -> "length", else "stop" as fallback
+  - No retry logic — raise immediately on error
 
 OUT OF SCOPE FOR THIS TASK
-  - Live integration tests (tests/integration/test_ollama_live.py — belongs to TASK-6)
-  - Tool-call-specific unit tests (covered in TASK-7)
-  - Anthropic provider (TASK-4)
+  - Tool-call handling (TASK-7)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 GIT

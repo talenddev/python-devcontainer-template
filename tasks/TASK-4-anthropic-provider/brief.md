@@ -1,72 +1,62 @@
-TASK-4: Anthropic Claude provider implementation (chat + stream, no tool calls)
+TASK-4: Anthropic Claude provider
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CONTEXT
-  What exists: src/aiproxy/providers/anthropic.py as empty stub, full domain types and
-    Provider protocol from TASK-2 and TASK-3.
-  What this task enables: TASK-6 (integration round-trip), TASK-7 (tool-call support for Anthropic).
+  What exists: Provider Protocol, Client, Registry from TASK-3; domain types from
+               TASK-2; scaffold from TASK-1 (anthropic SDK already in deps).
+  What this task enables: TASK-6 (integration tests) and TASK-7 (tool-call support).
 
 DEPENDS ON
   TASK-3
 
 OBJECTIVE
-  Implement AnthropicProvider satisfying the Provider protocol: AnthropicSettings (pydantic-settings),
-  chat() and stream() using httpx, message translation between neutral types and Anthropic wire format,
-  and HTTP error mapping to the error taxonomy. All tests use respx mocks — no live API calls.
+  Implement src/aiproxy/providers/anthropic.py: an AnthropicProvider class that
+  satisfies the Provider protocol, using the anthropic SDK (not raw httpx), backed
+  by AnthropicSettings (pydantic-settings). All HTTP calls mocked via respx in tests.
 
 ACCEPTANCE CRITERIA
-  - [ ] AnthropicSettings: api_key (SecretStr), base_url, api_version, timeout_s with env_prefix="ANTHROPIC_"
-  - [ ] AnthropicProvider.__init__ accepts **kwargs forwarded to AnthropicSettings
+  - [ ] AnthropicSettings(BaseSettings) in src/aiproxy/providers/anthropic.py with:
+        api_key: SecretStr, base_url: str, api_version: str, timeout_s: float,
+        env_prefix="ANTHROPIC_", env_file=".env"
+  - [ ] AnthropicProvider satisfies isinstance(provider, Provider) check
   - [ ] AnthropicProvider.name == "anthropic"
-  - [ ] chat() builds Anthropic messages API payload from ChatRequest:
-        - system field mapped from ChatRequest.system
-        - user/assistant messages with TextPart → {type: text, text: ...}
-        - ToolUsePart → {type: tool_use, id, name, input}
-        - ToolResultPart → {type: tool_result, tool_use_id, content}
-        - ToolSpec list → tools field in payload
-        - temperature, max_tokens, stop_sequences forwarded when set
-  - [ ] chat() parses Anthropic response into ChatResponse:
-        - content blocks: text → TextPart, tool_use → ToolUsePart
-        - finish_reason: "end_turn"→"stop", "max_tokens"→"length", "tool_use"→"tool_use"
-        - usage.input_tokens and usage.output_tokens mapped to Usage
-        - raw set to full response dict
-  - [ ] stream() uses SSE (text/event-stream) and emits neutral StreamEvents:
-        - content_block_delta/text_delta → TextDelta
-        - content_block_delta/input_json_delta → ToolCallDelta
-        - message_delta with stop_reason → StreamEnd
-  - [ ] HTTP 401 → AuthenticationError, 429 → RateLimitError, timeout → TimeoutError_,
-        other 4xx/5xx → ProviderError with status code
-  - [ ] AnthropicProvider registered in registry on import: register("anthropic", ...)
-  - [ ] aclose() closes the underlying httpx.AsyncClient
-  - [ ] tests/unit/providers/test_anthropic.py: uses respx to mock POST /v1/messages:
-        - test_chat_text_response: single TextPart in response
-        - test_chat_maps_finish_reason_stop
-        - test_chat_maps_finish_reason_length
-        - test_chat_authentication_error (401 → AuthenticationError)
-        - test_chat_rate_limit_error (429 → RateLimitError)
-        - test_stream_text_deltas: SSE stream yields TextDelta events then StreamEnd
-  - [ ] `uv run pytest tests/unit/providers/test_anthropic.py -v` exits 0
-  - [ ] `uv run mypy src/aiproxy/providers/anthropic.py` exits 0
-  - [ ] Coverage >= 90% on anthropic.py
+  - [ ] AnthropicProvider.chat() maps ChatRequest -> Anthropic messages API ->
+        ChatResponse with TextPart content, correct finish_reason, Usage, and raw
+  - [ ] AnthropicProvider.chat() maps ChatRequest.system to top-level system param
+  - [ ] AnthropicProvider.stream() yields TextDelta events then StreamEnd
+  - [ ] AnthropicProvider.aclose() closes the underlying httpx client
+  - [ ] Module-level self-registration: on import, registers "anthropic" in registry
+  - [ ] HTTP errors map to correct exception types:
+        401 -> AuthenticationError, 429 -> RateLimitError, other 4xx/5xx -> ProviderError
+  - [ ] ChatResponse.raw contains the untouched provider payload
+  - [ ] ANTHROPIC_API_KEY value is NOT present in ChatResponse.raw or any log output
+  - [ ] Unit tests in tests/unit/providers/test_anthropic.py (respx mocks, no real API):
+        - chat() returns ChatResponse with TextPart
+        - chat() with system param sends system field to API
+        - stream() yields TextDelta + StreamEnd
+        - 401 raises AuthenticationError
+        - 429 raises RateLimitError
+        - 500 raises ProviderError
+  - [ ] uv run pytest tests/unit/providers/test_anthropic.py -- all pass
+  - [ ] uv run ruff check src/aiproxy/providers/anthropic.py
+  - [ ] uv run mypy src/aiproxy/providers/anthropic.py
 
 FILES TO CREATE OR MODIFY
-  - src/aiproxy/providers/anthropic.py      ← implement
-  - tests/unit/providers/__init__.py        ← new
-  - tests/unit/providers/test_anthropic.py  ← new
+  - src/aiproxy/providers/anthropic.py    <- implement
+  - tests/unit/providers/test_anthropic.py <- new
 
 CONSTRAINTS
-  - Use httpx.AsyncClient directly (not the anthropic SDK) — keep deps minimal
-  - Use respx for all HTTP mocking in tests; no live API calls
-  - Anthropic API version header: "anthropic-version": settings.api_version
-  - x-api-key header from settings.api_key.get_secret_value()
-  - SSE parsing: iterate response lines, parse "data: {...}" lines as JSON
-  - Tool calls (ToolUsePart, ToolResultPart) in chat() must be translatable but
-    tool-call-specific TESTS are deferred to TASK-7
-  - uv add anthropic-related deps if needed; prefer raw httpx over the anthropic SDK
+  - Use the anthropic SDK (import anthropic), not raw httpx for this provider
+  - Use respx to mock HTTP in tests (not unittest.mock patching SDK internals)
+    -- if the SDK wraps httpx, respx can intercept; otherwise mock at SDK level
+    -- if respx cannot intercept the SDK transport, use pytest-mock to patch
+       the SDK client methods directly (anthropic.AsyncAnthropic)
+  - AnthropicSettings reads from env vars with prefix ANTHROPIC_
+  - api_key must be SecretStr; never call .get_secret_value() outside the provider
+  - No retry logic — raise immediately on error
 
 OUT OF SCOPE FOR THIS TASK
-  - Live integration tests against api.anthropic.com
-  - Tool-call-specific unit tests (covered in TASK-7)
-  - Ollama provider (TASK-5)
+  - Tool-call handling (TASK-7)
+  - Streaming with tool calls
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 GIT

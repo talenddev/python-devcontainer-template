@@ -1,58 +1,69 @@
-TASK-7: Tool-call support — one tool-call test per provider
+TASK-7: Tool-call support (ToolSpec/ToolUsePart/ToolResultPart wired into both providers)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CONTEXT
-  What exists: Both providers fully implemented with tool translation logic already in place
-    (per TASK-4 and TASK-5 acceptance criteria). Integration wiring confirmed by TASK-6.
-  What this task enables: First milestone complete.
+  What exists: Both providers implemented (TASK-4, TASK-5), integration tests
+               established (TASK-6). ToolSpec, ToolUsePart, ToolResultPart already
+               defined in types.py (TASK-2) but not yet wired into providers.
+  What this task enables: Final milestone — first-class tool calling for both providers.
 
 DEPENDS ON
   TASK-6
 
 OBJECTIVE
-  Add unit tests verifying that a ChatRequest with a ToolSpec causes each provider to:
-  (a) include the tool definition in its API payload, and (b) parse a tool_use/tool_calls
-  response block into a ToolUsePart in ChatResponse.content. Fix any provider bugs
-  discovered during these tests.
+  Wire ToolSpec → provider tool definitions and parse tool_use responses into
+  ToolUsePart in ChatResponse.content, for both AnthropicProvider and OllamaProvider.
+  Add one tool-call test per provider.
 
 ACCEPTANCE CRITERIA
-  - [ ] tests/unit/providers/test_anthropic.py gains:
-        test_chat_tool_call_response: mock returns a tool_use content block; asserts
-        ChatResponse.content contains a ToolUsePart with correct id, name, and arguments;
-        finish_reason == "tool_use"
-  - [ ] tests/unit/providers/test_anthropic.py gains:
-        test_chat_sends_tool_spec: respx captures request body; asserts tools list is present
-        with correct name, description, input_schema fields
-  - [ ] tests/unit/providers/test_ollama.py gains:
-        test_chat_tool_call_response: mock returns tool_calls in message; asserts
-        ChatResponse.content contains a ToolUsePart; finish_reason == "tool_use"
-  - [ ] tests/unit/providers/test_ollama.py gains:
-        test_chat_sends_tool_spec: asserts tools array present in request body
-  - [ ] All 4 new tests pass: `uv run pytest tests/unit/providers/ -v` exits 0
-  - [ ] `uv run pytest tests/` exits 0 (full suite clean)
-  - [ ] `uv run mypy src/aiproxy/providers/` exits 0
-  - [ ] Coverage >= 90% on anthropic.py and ollama.py (combined with TASK-4/5 tests)
+  - [ ] AnthropicProvider.chat(): when ChatRequest.tools is non-empty, sends
+        tools array in the API request (Anthropic native tool format)
+  - [ ] AnthropicProvider.chat(): when response contains tool_use block,
+        ChatResponse.content includes ToolUsePart with correct id, name, arguments
+  - [ ] AnthropicProvider.chat(): finish_reason == "tool_use" when stop_reason
+        is "tool_use"
+  - [ ] OllamaProvider.chat(): when ChatRequest.tools is non-empty, sends
+        tools array in OpenAI-compatible format (Ollama uses OpenAI tool schema)
+  - [ ] OllamaProvider.chat(): when response contains tool_calls, ChatResponse.content
+        includes ToolUsePart with correct id, name, arguments (parsed from JSON)
+  - [ ] OllamaProvider.chat(): finish_reason == "tool_use" when done_reason is
+        "tool_calls" or response has tool_calls
+  - [ ] ToolResultPart is accepted in ChatRequest.messages content (no validation
+        error) — providers must handle it in message serialization:
+        Anthropic: role="tool" with tool_use_id; Ollama: role="tool" with content
+  - [ ] Unit test in tests/unit/providers/test_anthropic.py:
+        - chat() with a get_weather ToolSpec returns ToolUsePart in content
+        - finish_reason == "tool_use"
+  - [ ] Unit test in tests/unit/providers/test_ollama.py:
+        - chat() with a get_weather ToolSpec returns ToolUsePart in content
+        - finish_reason == "tool_use"
+  - [ ] uv run pytest tests/unit/providers/ -- all pass (existing + new tool tests)
+  - [ ] uv run ruff check src/aiproxy/providers/
+  - [ ] uv run mypy src/aiproxy/providers/
 
 FILES TO CREATE OR MODIFY
-  - tests/unit/providers/test_anthropic.py  ← add 2 new test functions
-  - tests/unit/providers/test_ollama.py     ← add 2 new test functions
-  - src/aiproxy/providers/anthropic.py      ← fix if tool-call bugs found
-  - src/aiproxy/providers/ollama.py         ← fix if tool-call bugs found
+  - src/aiproxy/providers/anthropic.py    <- modify (add tool wiring)
+  - src/aiproxy/providers/ollama.py       <- modify (add tool wiring)
+  - tests/unit/providers/test_anthropic.py <- modify (add tool-call tests)
+  - tests/unit/providers/test_ollama.py   <- modify (add tool-call tests)
 
 CONSTRAINTS
-  - Use respx for all HTTP mocking
-  - ToolUsePart.arguments must be a dict (parsed from JSON), not a raw string
-  - Anthropic: tool_use block uses "input" key (not "arguments") — translate to arguments
-  - Ollama: tool_calls[].function.arguments is a dict — map to arguments
-  - Do NOT change neutral type definitions in types.py
+  - Anthropic tool format: {"name": str, "description": str, "input_schema": JSON-Schema}
+  - Ollama tool format (OpenAI-compatible): {"type": "function", "function":
+    {"name": str, "description": str, "parameters": JSON-Schema}}
+  - ToolResultPart in message: Anthropic serializes as content block with type
+    "tool_result"; Ollama serializes as {"role": "tool", "content": result_str}
+  - ToolUsePart.arguments must be a dict[str, Any] — parse from JSON string if
+    needed when deserializing tool_calls from Ollama
+  - Streaming tool-call support is OUT OF SCOPE (only non-streaming chat)
 
 OUT OF SCOPE FOR THIS TASK
-  - Multi-turn tool-result messages (ToolResultPart round-trip)
-  - Stream-mode tool call accumulation
-  - Any new providers
+  - Streaming tool-call deltas (ToolCallDelta)
+  - Multi-tool parallel calls in a single response
+  - Tool result validation / schema enforcement
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 GIT
   Branch: feature/TASK-7-tool-call-support  (branch from develop)
   Commit when done:
-    feat(tools): add tool-call tests and fix provider parsing for ToolUsePart
+    feat(tools): wire ToolSpec and ToolUsePart into Anthropic and Ollama providers
   Open PR into: develop

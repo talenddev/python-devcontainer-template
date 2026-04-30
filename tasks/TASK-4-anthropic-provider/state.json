@@ -7,6 +7,6 @@
   "branch": null,
   "pr": null,
   "depends_on": ["TASK-3"],
-  "security_hints": ["handles ANTHROPIC_API_KEY via pydantic SecretStr"],
+  "security_hints": ["ANTHROPIC_API_KEY must never be logged or included in ChatResponse.raw"],
   "blockers": []
 }

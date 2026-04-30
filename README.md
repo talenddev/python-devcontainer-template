@@ -2,11 +2,11 @@
 
 ## 🗺️ Team Overview
 
-This template provides a coordinated AI agent team for Python development workflows:
-- **System design & architecture** — Define service boundaries, docker-compose, and infrastructure skeletons
-- **Build orchestration** — Manage the multi-agent development loop from design to production
+This template provides a coordinated AI agent team for full-stack development workflows:
+- **System design & architecture** — Define service boundaries, docker-compose, infrastructure skeletons, and frontend brief
+- **Build orchestration** — Manage the multi-agent development loop from design to production (backend and frontend run in parallel)
 - **Code quality gates** — Review, test, and verify before deployment
-- **DevOps automation** — Terraform, ECS, CI/CD pipelines
+- **DevOps automation** — Terraform, ECS, CI/CD pipelines, static hosting
 - **Release management** — Versioning, changelogs, hotfix handling
 
 ```
@@ -14,42 +14,48 @@ You ──▶ python-architect              "design the system"
             │
             │  produces:
             │  ├── ARCHITECTURE BRIEF  ─────▶ python-tech-lead
+            │  ├── FRONTEND BRIEF      ─────▶ frontend-tech-lead  (if UI in scope)
             │  ├── docker-compose.yml
             │  ├── INFRA BRIEF             ─▶ devops
             │  └── DOCS BRIEF              ─▶ docs-writer
-            ▼
-python-tech-lead                      "Read docs/architecture-brief.md and run the full build. Decompose into tasks, write all task files first, then coordinate the team"
             │
-            │  orchestrates the full development loop:
-            │  1. python-developer       builds code
-            │  2. python-migrator        schema changes (if any)
-            │  3. python-reviewer        code quality gate
-            │  4. python-tester          coverage ≥ 90%
-            │  5. fix loop (max 3 iters)
-            │  6. merge checklist
-            ▼
-python-security-reviewer             (security gate)
-            │
-            ├── 🔴 critical/high  → fix/* branch → re-review (max 2x)
-            └── 🟢 clean          → proceed
-            ▼
-docs-writer                          (documentation gate)
-            │
-            │  generates:
-            │  ├── services/*/README.md
-            │  ├── docs/local-setup.md
-            │  ├── docs/api/*.md
-            │  ├── docs/adr/ADR-*.md
-            │  └── docs/runbooks/*.md
-            ▼
-devops                               (infrastructure)
-            │
-            Terraform + ECS + RDS + SQS + CI/CD + CloudWatch
-            ▼
-release-manager                      (shipping)
-            │
-            cut release/* → bump version → CHANGELOG
-            → PR to main → tag → back-merge to develop
+            ├──────────────────────────────────────────────────────┐
+            ▼                                                      ▼
+python-tech-lead "Read the backend brief decompose into tasks, write all task files first, then coordinate the team"
+                                                         frontend-tech-lead "Read the frontend brief decompose into tasks, write all task files first, then coordinate the team"
+            │                                                      │
+            │  1. python-developer       builds code               │  1. frontend-developer    builds UI
+            │  2. python-migrator        schema changes (if any)   │  2. frontend-reviewer     quality gate
+            │  3. python-reviewer        code quality gate         │  3. frontend-tester       coverage ≥ 85%
+            │  4. python-tester          coverage ≥ 90%            │  4. fix loop (max 3 iters)
+            │  5. fix loop (max 3 iters)                           │  5. merge checklist
+            │  6. merge checklist                                  │
+            └──────────────────┬───────────────────────────────────┘
+                               │  (both tracks complete)
+                               ▼
+               python-security-reviewer             (shared security gate)
+                               │
+                               ├── 🔴 critical/high  → fix/* branch → re-review (max 2x)
+                               └── 🟢 clean          → proceed
+                               ▼
+               docs-writer                          (shared documentation gate)
+                               │
+                               │  generates:
+                               │  ├── services/*/README.md
+                               │  ├── docs/local-setup.md
+                               │  ├── docs/frontend-setup.md
+                               │  ├── docs/api/*.md
+                               │  ├── docs/adr/ADR-*.md
+                               │  └── docs/runbooks/*.md
+                               ▼
+               devops                               (infrastructure)
+                               │
+                               Terraform + ECS + RDS + SQS + S3 (static) + CI/CD + CloudWatch
+                               ▼
+               release-manager                      (shipping)
+                               │
+                               cut release/* → bump version → CHANGELOG
+                               → PR to main → tag → back-merge to develop
 ```
 
 ---
@@ -123,14 +129,14 @@ opencode
 
 ## 🤖 Agent Team
 
-### python-architect
+### python-architect (+ frontend brief)
 **System Design & Architecture**
 
 Designs the initial system structure, defines service boundaries, and creates infrastructure scaffolding.
 
 | Trigger | What it produces |
 |---|---|
-| `"design"` | System architecture document |
+| `"design"` | System architecture document + optional frontend brief |
 | `"architect"` | Service boundary definitions |
 | `"how should I structure"` | Directory structure recommendations |
 | `"microservice"` | Service decomposition plan |
@@ -277,6 +283,79 @@ claude "security review before deploying"
 
 # Check for vulnerabilities
 claude "scan for CVE-2023-32681 in dependencies"
+```
+
+---
+
+### frontend-tech-lead
+**Frontend Build Orchestration**
+
+Manages the full frontend development loop, delegating tasks to frontend-developer, frontend-reviewer, and frontend-tester. Reads `docs/frontend-brief.md` produced by the architect.
+
+| Trigger | What it does |
+|---|---|
+| `"build the frontend"` | Starts full UI implementation loop |
+| `"implement the frontend brief"` | Executes architect's frontend design |
+| `"run the frontend team"` | Orchestrates all frontend agents |
+| `"coordinate the frontend team"` | Multi-agent frontend coordination |
+
+**Usage Example:**
+```bash
+claude "implement the frontend brief from docs/frontend-brief.md"
+```
+
+---
+
+### frontend-developer
+**UI Implementation**
+
+Writes TypeScript/React code using pnpm, Vitest, and Testing Library. Handles all coding tasks assigned by the frontend tech-lead.
+
+| Trigger | What it does |
+|---|---|
+| assigned by frontend-tech-lead | Implements UI tasks |
+
+**Usage Example:**
+```bash
+# Manual invocation:
+claude "create the OrderList component with loading and error states"
+```
+
+---
+
+### frontend-reviewer
+**Frontend Code Quality Review**
+
+Reviews components, hooks, and utilities for design quality, TypeScript safety, accessibility violations, and architectural boundary violations. Runs before frontend testing.
+
+| Trigger | What it does |
+|---|---|
+| `"review this component"` | Reviews component quality |
+| `"check frontend code quality"` | Validates design and patterns |
+| assigned by frontend-tech-lead | Automated code review |
+
+**Usage Example:**
+```bash
+claude "review this component before testing"
+```
+
+---
+
+### frontend-tester
+**Frontend Testing & Coverage**
+
+Audits test coverage (target ≥ 85%), raises bug reports, runs vitest suites with Testing Library.
+
+| Trigger | What it does |
+|---|---|
+| assigned by frontend-tech-lead | Runs test suite |
+| `"add frontend tests"` | Creates component/hook tests |
+| `"check frontend coverage"` | Coverage audit |
+| `"why is this test failing"` | Debug failing tests |
+
+**Usage Example:**
+```bash
+claude "add tests for the OrderList component"
 ```
 
 ---
